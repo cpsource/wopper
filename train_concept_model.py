@@ -1,5 +1,15 @@
 # train_concept_model.py
 
+from logger import get_logger
+log = get_logger(__name__)
+
+log.info("Starting train_concept_model")
+
+# suggestions
+#log.info(f"Generated program saved to: {output_path}")
+#log.debug(f"Response content:\n{response[:500]}")
+#log.warning(f"ChatGPT retry due to error: {stderr}")
+
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
