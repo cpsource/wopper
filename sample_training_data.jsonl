@@ -1,0 +1,3 @@
+{"sentence": "The girl went to the grocery store.", "subject": "girl", "action": "went", "destination": "grocery store"}
+{"sentence": "The boy ran to school.", "subject": "boy", "action": "ran", "destination": "school"}
+{"sentence": "The cat sat on the radiator.", "subject": "cat", "action": "sat", "destination": "radiator"}

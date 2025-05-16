@@ -1,0 +1,55 @@
+# vocab_manager.py
+
+import json
+
+class VocabManager:
+    def __init__(self):
+        self.token_to_id = {}
+        self.id_to_token = {}
+        self.next_id = 0
+        self._frozen = False
+
+    def add_token(self, token):
+        if self._frozen:
+            return
+        if token not in self.token_to_id:
+            self.token_to_id[token] = self.next_id
+            self.id_to_token[self.next_id] = token
+            self.next_id += 1
+
+    def get_id(self, token):
+        return self.token_to_id.get(token, self.token_to_id.get("<UNK>", -1))
+
+    def get_token(self, idx):
+        return self.id_to_token.get(idx, "<UNK>")
+
+    def freeze(self):
+        self._frozen = True
+        if "<UNK>" not in self.token_to_id:
+            self.add_token("<UNK>")
+
+    def save(self, filepath):
+        with open(filepath, 'w') as f:
+            json.dump({"token_to_id": self.token_to_id}, f)
+
+    def load(self, filepath):
+        with open(filepath, 'r') as f:
+            data = json.load(f)
+            self.token_to_id = data["token_to_id"]
+            self.id_to_token = {int(v): k for k, v in self.token_to_id.items()}
+            self.next_id = max(self.id_to_token.keys()) + 1
+            self._frozen = True
+
+if __name__ == "__main__":
+    vm = VocabManager()
+    for word in ["cat", "sat", "mat"]:
+        vm.add_token(word)
+    vm.freeze()
+
+    print("Token to ID:", vm.token_to_id)
+    print("ID to Token:", vm.id_to_token)
+    print("ID for 'sat':", vm.get_id("sat"))
+    print("Token for ID 2:", vm.get_token(2))
+
+    vm.save("test_vocab.json")
+    print("Saved vocab to test_vocab.json")
