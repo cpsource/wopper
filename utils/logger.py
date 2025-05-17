@@ -3,8 +3,15 @@
 
 import logging
 import os
-from dotenv import load_dotenv
 from pathlib import Path
+
+# The logger does not strictly require python-dotenv. Import it lazily so
+# the module can be used even when the package is missing.
+try:  # pragma: no cover - optional dependency
+    from dotenv import load_dotenv  # noqa: F401
+except Exception:  # pragma: no cover - missing package
+    def load_dotenv(*args, **kwargs):
+        return False
 
 def get_logger(name: str, level: str = None) -> logging.Logger:
     logger = logging.getLogger(name)
