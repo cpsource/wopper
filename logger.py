@@ -1,4 +1,5 @@
 # logger.py
+# Provides a simple file and console logging setup.
 
 import logging
 import os

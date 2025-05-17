@@ -1,4 +1,5 @@
 # train_concept_model.py
+# Trains the ConceptInferencer on the sample dataset with early stopping.
 
 from logger import get_logger
 log = get_logger(__name__)

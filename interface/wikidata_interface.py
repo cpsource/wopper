@@ -1,3 +1,4 @@
+# Helper for running SPARQL queries against Wikidata.
 import os
 from dotenv import load_dotenv
 from SPARQLWrapper import SPARQLWrapper, JSON

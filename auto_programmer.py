@@ -1,4 +1,5 @@
 # auto_programmer.py
+# Iteratively asks ChatGPT to produce a working Python module.
 
 import os
 from dotenv import load_dotenv

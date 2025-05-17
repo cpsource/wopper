@@ -1,4 +1,5 @@
 # dataset_loader.py
+# Reads training examples from JSONL and tokenizes them with BERT.
 
 import json
 import os

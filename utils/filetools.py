@@ -1,4 +1,5 @@
 # utils/filetools.py
+# Helper functions for working with text and JSONL files.
 
 import os
 from dotenv import load_dotenv
