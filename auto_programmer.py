@@ -8,7 +8,7 @@ import subprocess
 import tempfile
 import traceback
 from interface.chatgpt_interface import ChatGPTInterface
-from logger import get_logger
+from utils.logger import get_logger
 
 log = get_logger(__name__)
 log.debug("Starting auto_programmer.py")

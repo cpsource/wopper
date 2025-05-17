@@ -2,7 +2,7 @@
 import os
 from dotenv import load_dotenv
 from openai import OpenAI
-from logger import get_logger
+from utils.logger import get_logger
 
 log = get_logger(__name__)
 log.debug("Starting chatgpt_interface.py")

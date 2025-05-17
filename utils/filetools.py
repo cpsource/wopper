@@ -5,7 +5,7 @@ import os
 from dotenv import load_dotenv
 import json
 from typing import List, Dict, Any
-from logger import get_logger
+from utils.logger import get_logger
 
 log = get_logger(__name__)
 log.debug("Starting filetools.py")

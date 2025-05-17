@@ -6,7 +6,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from transformers import BertTokenizer
 from vocab_manager import VocabManager
-from logger import get_logger
+from utils.logger import get_logger
 
 log = get_logger(__name__)
 log.debug("Starting dataset_loader-1.py")

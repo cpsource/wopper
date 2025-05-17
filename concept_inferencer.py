@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import torch
 import torch.nn as nn
 from transformers import BertTokenizer, BertModel
-from logger import get_logger
+from utils.logger import get_logger
 
 log = get_logger(__name__)
 log.debug("Starting concept_inferencer.py")
