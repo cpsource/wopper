@@ -8,6 +8,7 @@ import torch
 from torch.utils.data import Dataset
 from transformers import BertTokenizer
 from utils.logger import get_logger
+from vocab_manager import VocabManager
 
 log = get_logger(__name__)
 log.debug("Starting dataset_loader.py")
@@ -60,4 +61,22 @@ class ConceptDataset(Dataset):
 
     def __getitem__(self, idx):
         return self.data[idx]
+
+
+# --------------------------
+# 🧪 Local test function
+# --------------------------
+def main():
+    """Quick smoke test for ConceptDataset."""
+    vm = VocabManager()
+    dataset = ConceptDataset("sample_training_data.jsonl", vm)
+    vm.freeze()
+
+    log.info("Loaded %d examples", len(dataset))
+    sample = dataset[0]
+    log.info("Sample: %s", {k: v.shape if hasattr(v, "shape") else v for k, v in sample.items()})
+
+
+if __name__ == "__main__":
+    main()
 
