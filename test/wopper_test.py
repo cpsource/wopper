@@ -1,18 +1,13 @@
 # wopper/test/wopper_test.py
 # Basic smoke tests for the Wikidata interface and placeholders for future tests.
 
-import sys
-import os
 from dotenv import load_dotenv
 from logger import get_logger
 
 log = get_logger(__name__)
 log.debug("Starting wopper_test.py")
 
-# Ensure interface directory is on the Python path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'interface')))
-
-from wikidata_interface import WikidataInterface
+from interface import WikidataInterface
 
 
 def test_wikidata_interface():
