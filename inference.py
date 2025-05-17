@@ -29,9 +29,7 @@ def predict_concepts(sentence, model, tokenizer, vocab, device):
 
 
 def main():
-#    sentence = "The girl went to the grocery store."
-    sentence = "She was a good girl."
-#    sentence = "The cat sat on the radiator."
+    sentence = "The girl went to the grocery store."
 
     # Load vocab
     vocab = VocabManager()
