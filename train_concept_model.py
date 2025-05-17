@@ -62,6 +62,9 @@ def main():
 
     # Model, optimizer, loss
     model = ConceptInferencer().to(device)
+
+    print(model)
+
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
     criterion = nn.CrossEntropyLoss()
 
