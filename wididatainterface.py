@@ -37,3 +37,22 @@ class WikidataInterface:
             return [res['itemLabel']['value'] for res in results['results']['bindings']]
         return []
 
+
+# --------------------------
+# 🧪 Local test function
+# --------------------------
+def main():
+    """Run a simple subclass query as a smoke test."""
+    wikidata = WikidataInterface()
+    subclasses = wikidata.get_subclasses("Q1292119")  # grocery store
+    if subclasses:
+        log.info("Found subclasses:")
+        for label in subclasses[:5]:
+            log.info(" - %s", label)
+    else:
+        log.warning("No results returned from SPARQL query.")
+
+
+if __name__ == "__main__":
+    main()
+

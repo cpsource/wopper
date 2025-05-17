@@ -67,6 +67,8 @@ interface modules.
    SPARQL queries.
 5. The `utils/auto_programmer.py` script demonstrates how ChatGPT can
    iteratively produce working Python utilities.
+6. Run `pytest` to execute the smoke tests in `test/` which call each module's
+   `main()` function when available.
 
 ### What to Learn Next
 
