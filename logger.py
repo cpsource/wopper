@@ -2,6 +2,7 @@
 
 import logging
 import os
+from dotenv import load_dotenv
 from pathlib import Path
 
 def get_logger(name: str, level: str = None) -> logging.Logger:

@@ -1,9 +1,15 @@
+import os
+from dotenv import load_dotenv
 import torch
 import torch.nn as nn
 from transformers import BertTokenizer, BertModel
 
 class ConceptInferencer(nn.Module):
     def __init__(self, hidden_dim=256):
+        load_dotenv(os.path.expanduser("~/.env"))
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY not found in ~/.env")
         super(ConceptInferencer, self).__init__()
         self.bert = BertModel.from_pretrained('bert-base-uncased')
         self.hidden = nn.Linear(self.bert.config.hidden_size, hidden_dim)

@@ -1,5 +1,7 @@
 # texttools.py
 
+import os
+from dotenv import load_dotenv
 import re
 import string
 from typing import List

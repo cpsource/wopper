@@ -2,6 +2,7 @@
 
 import sys
 import os
+from dotenv import load_dotenv
 
 # Ensure interface directory is on the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'interface')))

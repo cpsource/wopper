@@ -1,6 +1,7 @@
 # utils/filetools.py
 
 import os
+from dotenv import load_dotenv
 import json
 from typing import List, Dict, Any
 

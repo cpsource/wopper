@@ -1,5 +1,3 @@
-import os
-from dotenv import load_dotenv
 import torch
 from transformers import BertTokenizer
 from concept_inferencer import ConceptInferencer

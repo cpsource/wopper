@@ -17,6 +17,8 @@ from concept_inferencer import ConceptInferencer
 from dataset_loader import ConceptDataset
 from vocab_manager import VocabManager
 import matplotlib.pyplot as plt
+import os
+from dotenv import load_dotenv
 
 
 def train(model, dataloader, optimizer, criterion, device):

@@ -1,3 +1,6 @@
+import os
+from dotenv import load_dotenv
+
 def print_hello_world():
     """Function to print 'hello world' to the console."""
     print("hello world")

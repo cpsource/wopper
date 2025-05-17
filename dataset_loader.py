@@ -1,12 +1,18 @@
 # dataset_loader.py
 
 import json
+import os
+from dotenv import load_dotenv
 import torch
 from torch.utils.data import Dataset
 from transformers import BertTokenizer
 
 class ConceptDataset(Dataset):
     def __init__(self, jsonl_file, vocab_manager):
+        load_dotenv(os.path.expanduser("~/.env"))
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY not found in ~/.env")
         self.data = []
         self.vocab = vocab_manager
         self.tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")

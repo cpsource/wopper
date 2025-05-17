@@ -1,9 +1,15 @@
 # vocab_manager.py
 
 import json
+import os
+from dotenv import load_dotenv
 
 class VocabManager:
     def __init__(self):
+        load_dotenv(os.path.expanduser("~/.env"))
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY not found in ~/.env")
         self.token_to_id = {}
         self.id_to_token = {}
         self.next_id = 0

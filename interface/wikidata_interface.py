@@ -1,7 +1,13 @@
+import os
+from dotenv import load_dotenv
 from SPARQLWrapper import SPARQLWrapper, JSON
 
 class WikidataInterface:
     def __init__(self, endpoint="https://query.wikidata.org/sparql"):
+        load_dotenv(os.path.expanduser("~/.env"))
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY not found in ~/.env")
         self.endpoint = endpoint
         self.sparql = SPARQLWrapper(endpoint)
 

@@ -1,6 +1,7 @@
 # auto_programmer.py
 
 import os
+from dotenv import load_dotenv
 import sys
 import subprocess
 import tempfile

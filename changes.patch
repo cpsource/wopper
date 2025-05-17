@@ -1,0 +1,593 @@
+diff --git a/auto_programmer-1.py b/auto_programmer-1.py
+index 002b048..19a8d7b 100644
+--- a/auto_programmer-1.py
++++ b/auto_programmer-1.py
+@@ -1,28 +1,29 @@
+ # auto_programmer.py
+ 
+ import os
++from dotenv import load_dotenv
+ import re
+ import subprocess
+ import tempfile
+ from interface.chatgpt_interface import ChatGPTInterface
+ 
+ MAX_RETRIES = 5
+ 
+ 
+ def extract_code(text):
+     match = re.search(r"```(?:python)?\n(.*?)```", text, re.DOTALL)
+     return match.group(1).strip() if match else None
+ 
+ 
+ def run_code(file_path):
+     result = subprocess.run(
+         ["python3", file_path], capture_output=True, text=True
+     )
+     return result.returncode == 0, result.stdout, result.stderr
+ 
+ 
+ def write_temp_file(code, name_hint="generated_module"):
+     temp_dir = os.path.join("/tmp", "wopper_autogen")
+     os.makedirs(temp_dir, exist_ok=True)
+     file_path = os.path.join(temp_dir, f"{name_hint}.py")
+     with open(file_path, "w") as f:
+diff --git a/auto_programmer.py b/auto_programmer.py
+index 4152df9..401ef70 100644
+--- a/auto_programmer.py
++++ b/auto_programmer.py
+@@ -1,28 +1,29 @@
+ # auto_programmer.py
+ 
+ import os
++from dotenv import load_dotenv
+ import sys
+ import subprocess
+ import tempfile
+ import traceback
+ from interface.chatgpt_interface import ChatGPTInterface
+ 
+ MAX_ATTEMPTS = 5
+ OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "utils")
+ 
+ def generate_code(prompt):
+     chatgpt = ChatGPTInterface()
+     response = chatgpt.client.chat.completions.create(
+         model=chatgpt.model,
+         messages=[{"role": "user", "content": prompt}],
+         temperature=0.7
+     )
+     content = response.choices[0].message.content.strip()
+     tokens_used = response.usage.total_tokens if hasattr(response, 'usage') else 'Unknown'
+     return content, tokens_used
+ 
+ def extract_code(text):
+     # If code is wrapped in triple backticks, extract that block
+     if "```" in text:
+         lines = text.split("```")
+         for block in lines:
+diff --git a/concept_inferencer.py b/concept_inferencer.py
+index 623dfee..cd28469 100644
+--- a/concept_inferencer.py
++++ b/concept_inferencer.py
+@@ -1,31 +1,37 @@
++import os
++from dotenv import load_dotenv
+ import torch
+ import torch.nn as nn
+ from transformers import BertTokenizer, BertModel
+ 
+ class ConceptInferencer(nn.Module):
+     def __init__(self, hidden_dim=256):
++        load_dotenv(os.path.expanduser("~/.env"))
++        api_key = os.getenv("OPENAI_API_KEY")
++        if not api_key:
++            raise ValueError("OPENAI_API_KEY not found in ~/.env")
+         super(ConceptInferencer, self).__init__()
+         self.bert = BertModel.from_pretrained('bert-base-uncased')
+         self.hidden = nn.Linear(self.bert.config.hidden_size, hidden_dim)
+         self.relu = nn.ReLU()
+ 
+         # Output heads for each concept field
+         self.subject_head = nn.Linear(hidden_dim, 1000)       # 1000 = vocab limit
+         self.action_head = nn.Linear(hidden_dim, 1000)
+         self.destination_head = nn.Linear(hidden_dim, 1000)
+ 
+     def forward(self, input_ids, attention_mask):
+         with torch.no_grad():
+             outputs = self.bert(input_ids=input_ids, attention_mask=attention_mask)
+         x = self.relu(self.hidden(outputs.pooler_output))
+         
+         subject_logits = self.subject_head(x)
+         action_logits = self.action_head(x)
+         destination_logits = self.destination_head(x)
+         
+         return subject_logits, action_logits, destination_logits
+ 
+ # --------------------------
+ # 🧪 Local test function
+ # --------------------------
+ def main():
+diff --git a/dataset_loader-1.py b/dataset_loader-1.py
+index 21fcd53..afcc730 100644
+--- a/dataset_loader-1.py
++++ b/dataset_loader-1.py
+@@ -1,33 +1,39 @@
+ import json
++import os
++from dotenv import load_dotenv
+ import torch
+ from torch.utils.data import Dataset, DataLoader
+ from transformers import BertTokenizer
+ from vocab_manager import VocabManager
+ 
+ class ConceptDataset(Dataset):
+     def __init__(self, data_path, vocab_manager):
++        load_dotenv(os.path.expanduser("~/.env"))
++        api_key = os.getenv("OPENAI_API_KEY")
++        if not api_key:
++            raise ValueError("OPENAI_API_KEY not found in ~/.env")
+         self.data = []
+         self.vocab = vocab_manager
+         self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+ 
+         with open(data_path, 'r') as f:
+             for line in f:
+                 if not line.strip():
+                     continue # skip empty lines
+                 example = json.loads(line)
+                 sentence = example["sentence"]
+                 subject = example["subject"]
+                 action = example["action"]
+                 destination = example["destination"]
+ 
+                 self.vocab.add_word(subject)
+                 self.vocab.add_word(action)
+                 self.vocab.add_word(destination)
+ 
+                 self.data.append({
+                     "sentence": sentence,
+                     "subject_id": self.vocab.get_id(subject),
+                     "action_id": self.vocab.get_id(action),
+                     "destination_id": self.vocab.get_id(destination)
+                 })
+ 
+diff --git a/dataset_loader.py b/dataset_loader.py
+index 822d777..18295d3 100644
+--- a/dataset_loader.py
++++ b/dataset_loader.py
+@@ -1,34 +1,40 @@
+ # dataset_loader.py
+ 
+ import json
++import os
++from dotenv import load_dotenv
+ import torch
+ from torch.utils.data import Dataset
+ from transformers import BertTokenizer
+ 
+ class ConceptDataset(Dataset):
+     def __init__(self, jsonl_file, vocab_manager):
++        load_dotenv(os.path.expanduser("~/.env"))
++        api_key = os.getenv("OPENAI_API_KEY")
++        if not api_key:
++            raise ValueError("OPENAI_API_KEY not found in ~/.env")
+         self.data = []
+         self.vocab = vocab_manager
+         self.tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+ 
+         with open(jsonl_file, 'r') as f:
+             for line_num, line in enumerate(f, start=1):
+                 try:
+                     example = json.loads(line)
+                     sentence = example['sentence']
+                     subject = example['subject']
+                     action = example['action']
+                     destination = example['destination']
+ 
+                     self.vocab.add_token(subject)
+                     self.vocab.add_token(action)
+                     self.vocab.add_token(destination)
+ 
+                     tokenized = self.tokenizer(sentence, truncation=True, padding='max_length', max_length=32, return_tensors="pt")
+ 
+                     subject_id = self.vocab.get_id(subject)
+                     action_id = self.vocab.get_id(action)
+                     destination_id = self.vocab.get_id(destination)
+ 
+                     # Debug print
+                     print(f"[Line {line_num}] {sentence} → subj: {subject_id} ({subject}), act: {action_id} ({action}), dest: {destination_id} ({destination})")
+diff --git a/inference.py b/inference.py
+index 42e166e..bb523fe 100644
+--- a/inference.py
++++ b/inference.py
+@@ -1,25 +1,27 @@
++import os
++from dotenv import load_dotenv
+ import torch
+ from transformers import BertTokenizer
+ from concept_inferencer import ConceptInferencer
+ from vocab_manager import VocabManager
+ 
+ 
+ def predict_concepts(sentence, model, tokenizer, vocab, device):
+     model.eval()
+     inputs = tokenizer(sentence, return_tensors="pt", padding="max_length", truncation=True, max_length=32).to(device)
+     with torch.no_grad():
+         subj_logits, act_logits, dest_logits = model(inputs['input_ids'], inputs['attention_mask'])
+ 
+     subj_id = torch.argmax(subj_logits, dim=1).item()
+     act_id = torch.argmax(act_logits, dim=1).item()
+     dest_id = torch.argmax(dest_logits, dim=1).item()
+ 
+     subject = vocab.get_token(subj_id)
+     action = vocab.get_token(act_id)
+     destination = vocab.get_token(dest_id)
+ 
+     return subject, action, destination
+ 
+ 
+ def main():
+     sentence = "The girl went to the grocery store."
+diff --git a/interface/wikidata_interface.py b/interface/wikidata_interface.py
+index 72cedd4..29510fe 100644
+--- a/interface/wikidata_interface.py
++++ b/interface/wikidata_interface.py
+@@ -1,29 +1,35 @@
++import os
++from dotenv import load_dotenv
+ from SPARQLWrapper import SPARQLWrapper, JSON
+ 
+ class WikidataInterface:
+     def __init__(self, endpoint="https://query.wikidata.org/sparql"):
++        load_dotenv(os.path.expanduser("~/.env"))
++        api_key = os.getenv("OPENAI_API_KEY")
++        if not api_key:
++            raise ValueError("OPENAI_API_KEY not found in ~/.env")
+         self.endpoint = endpoint
+         self.sparql = SPARQLWrapper(endpoint)
+ 
+     def _run_query(self, query):
+         self.sparql.setQuery(query)
+         self.sparql.setReturnFormat(JSON)
+         try:
+             results = self.sparql.query().convert()
+             return results
+         except Exception as e:
+             print("SPARQL query failed:", e)
+             return None
+ 
+     def get_subclasses(self, concept_id):
+         """
+         Returns a list of (QID, label) tuples for valid subclasses of a given Wikidata concept,
+         filtered to only return results that are declared instances of 'class'.
+ 
+         Args:
+             concept_id (str): A Wikidata QID (e.g., 'Q2134413' for shop)
+ 
+         Returns:
+             list of tuples: [(qid, label), ...]
+         """
+         query = f"""
+diff --git a/logger.py b/logger.py
+index 5910196..a68c18f 100644
+--- a/logger.py
++++ b/logger.py
+@@ -1,29 +1,30 @@
+ # logger.py
+ 
+ import logging
+ import os
++from dotenv import load_dotenv
+ from pathlib import Path
+ 
+ def get_logger(name: str, level: str = None) -> logging.Logger:
+     logger = logging.getLogger(name)
+     if logger.handlers:
+         return logger  # Already configured
+ 
+     log_level = level or os.getenv("WOPPER_LOG_LEVEL", "INFO").upper()
+     log_dir = Path("logs")
+     log_dir.mkdir(exist_ok=True)
+     log_file = log_dir / "wopper.log"
+ 
+     # Console handler
+     console_handler = logging.StreamHandler()
+     console_formatter = logging.Formatter("[%(levelname)s] %(message)s")
+     console_handler.setFormatter(console_formatter)
+ 
+     # File handler
+     file_handler = logging.FileHandler(log_file)
+     file_formatter = logging.Formatter(
+         "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+         datefmt="%Y-%m-%d %H:%M:%S"
+     )
+     file_handler.setFormatter(file_formatter)
+ 
+diff --git a/test/wopper_test.py b/test/wopper_test.py
+index f953ce1..0d4d3bc 100644
+--- a/test/wopper_test.py
++++ b/test/wopper_test.py
+@@ -1,29 +1,30 @@
+ # wopper/test/wopper_test.py
+ 
+ import sys
+ import os
++from dotenv import load_dotenv
+ 
+ # Ensure interface directory is on the Python path
+ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'interface')))
+ 
+ from wikidata_interface import WikidataInterface
+ 
+ 
+ def test_wikidata_interface():
+     print("🔍 Testing: Wikidata Interface")
+ 
+     wikidata = WikidataInterface()
+     subclasses = wikidata.get_subclasses("Q1292119")  # Q1292119 = grocery store
+ 
+     if subclasses:
+         print("✅ Received subclass results:")
+         for label in subclasses[:5]:
+             print(f"   • {label}")
+     else:
+         print("❌ No results returned from SPARQL query.")
+ 
+ def main():
+     print("🚀 WOPPER Top-Level Test Runner")
+     print("=" * 40)
+ 
+     test_wikidata_interface()
+diff --git a/train_concept_model-1.py b/train_concept_model-1.py
+index ee3bef8..86ac205 100644
+--- a/train_concept_model-1.py
++++ b/train_concept_model-1.py
+@@ -1,25 +1,27 @@
++import os
++from dotenv import load_dotenv
+ import torch
+ import torch.nn as nn
+ from torch.utils.data import DataLoader
+ from concept_inferencer import ConceptInferencer
+ from dataset_loader import ConceptDataset
+ from vocab_manager import VocabManager
+ 
+ 
+ def train(model, dataloader, optimizer, criterion, device):
+     model.train()
+     total_loss = 0
+     for batch in dataloader:
+         input_ids = batch['input_ids'].to(device)
+         attention_mask = batch['attention_mask'].to(device)
+         subject_id = batch['subject_id'].to(device)
+         action_id = batch['action_id'].to(device)
+         destination_id = batch['destination_id'].to(device)
+ 
+         optimizer.zero_grad()
+         subj_logits, act_logits, dest_logits = model(input_ids, attention_mask)
+ 
+         loss = criterion(subj_logits, subject_id) + \
+                criterion(act_logits, action_id) + \
+                criterion(dest_logits, destination_id)
+ 
+diff --git a/train_concept_model.py b/train_concept_model.py
+index 5ae60ce..b1d61b2 100644
+--- a/train_concept_model.py
++++ b/train_concept_model.py
+@@ -1,44 +1,46 @@
+ # train_concept_model.py
+ 
+ from logger import get_logger
+ log = get_logger(__name__)
+ 
+ log.info("Starting train_concept_model")
+ 
+ # suggestions
+ #log.info(f"Generated program saved to: {output_path}")
+ #log.debug(f"Response content:\n{response[:500]}")
+ #log.warning(f"ChatGPT retry due to error: {stderr}")
+ 
+ import torch
+ import torch.nn as nn
+ from torch.utils.data import DataLoader
+ from concept_inferencer import ConceptInferencer
+ from dataset_loader import ConceptDataset
+ from vocab_manager import VocabManager
+ import matplotlib.pyplot as plt
++import os
++from dotenv import load_dotenv
+ 
+ 
+ def train(model, dataloader, optimizer, criterion, device):
+     model.train()
+     total_loss = 0
+     for batch in dataloader:
+         input_ids = batch['input_ids'].to(device)
+         attention_mask = batch['attention_mask'].to(device)
+         subject_id = batch['subject_id'].to(device)
+         action_id = batch['action_id'].to(device)
+         destination_id = batch['destination_id'].to(device)
+ 
+         optimizer.zero_grad()
+         subj_logits, act_logits, dest_logits = model(input_ids, attention_mask)
+ 
+         loss = criterion(subj_logits, subject_id) + \
+                criterion(act_logits, action_id) + \
+                criterion(dest_logits, destination_id)
+ 
+         loss.backward()
+         optimizer.step()
+         total_loss += loss.item()
+ 
+     return total_loss / len(dataloader)
+ 
+diff --git a/utils/filetools.py b/utils/filetools.py
+index e8ecc73..f65b9e7 100644
+--- a/utils/filetools.py
++++ b/utils/filetools.py
+@@ -1,28 +1,29 @@
+ # utils/filetools.py
+ 
+ import os
++from dotenv import load_dotenv
+ import json
+ from typing import List, Dict, Any
+ 
+ def ensure_dir(path: str):
+     """Ensure that a directory exists."""
+     os.makedirs(path, exist_ok=True)
+ 
+ 
+ def read_jsonl(filepath: str) -> List[Dict[str, Any]]:
+     """Read a JSONL (JSON Lines) file."""
+     data = []
+     with open(filepath, 'r', encoding='utf-8') as f:
+         for line in f:
+             if line.strip():
+                 try:
+                     data.append(json.loads(line))
+                 except json.JSONDecodeError as e:
+                     print(f"Error parsing line: {line.strip()}\n{e}")
+     return data
+ 
+ 
+ def write_jsonl(filepath: str, data: List[Dict[str, Any]]):
+     """Write a list of dictionaries to a JSONL file."""
+     with open(filepath, 'w', encoding='utf-8') as f:
+         for entry in data:
+diff --git a/utils/hello_world.py b/utils/hello_world.py
+index 81d0ce3..4c718a4 100644
+--- a/utils/hello_world.py
++++ b/utils/hello_world.py
+@@ -1,10 +1,13 @@
++import os
++from dotenv import load_dotenv
++
+ def print_hello_world():
+     """Function to print 'hello world' to the console."""
+     print("hello world")
+ 
+ def main():
+     """Main function to test the print_hello_world function."""
+     print_hello_world()
+ 
+ if __name__ == "__main__":
+     main()
+\ No newline at end of file
+diff --git a/utils/texttools.py b/utils/texttools.py
+index 8f0af0e..d0e9354 100644
+--- a/utils/texttools.py
++++ b/utils/texttools.py
+@@ -1,27 +1,29 @@
+ # texttools.py
+ 
++import os
++from dotenv import load_dotenv
+ import re
+ import string
+ from typing import List
+ 
+ def normalize_text(text: str) -> str:
+     """Lowercase, remove punctuation, and extra spaces."""
+     text = text.lower()
+     text = re.sub(f"[{re.escape(string.punctuation)}]", "", text)
+     text = re.sub(r"\s+", " ", text).strip()
+     return text
+ 
+ def tokenize(text: str) -> List[str]:
+     """Split text into tokens using whitespace."""
+     return text.split()
+ 
+ def extract_concepts(text: str, stopwords: List[str] = None) -> List[str]:
+     """Extract meaningful tokens by removing stopwords."""
+     if stopwords is None:
+         stopwords = []
+     tokens = tokenize(normalize_text(text))
+     return [token for token in tokens if token not in stopwords]
+ 
+ def unique_words(texts: List[str]) -> List[str]:
+     """Return a sorted list of unique words from a list of texts."""
+     words = set()
+diff --git a/vocab_manager.py b/vocab_manager.py
+index 7980824..54dea15 100644
+--- a/vocab_manager.py
++++ b/vocab_manager.py
+@@ -1,31 +1,37 @@
+ # vocab_manager.py
+ 
+ import json
++import os
++from dotenv import load_dotenv
+ 
+ class VocabManager:
+     def __init__(self):
++        load_dotenv(os.path.expanduser("~/.env"))
++        api_key = os.getenv("OPENAI_API_KEY")
++        if not api_key:
++            raise ValueError("OPENAI_API_KEY not found in ~/.env")
+         self.token_to_id = {}
+         self.id_to_token = {}
+         self.next_id = 0
+         self._frozen = False
+ 
+     def add_token(self, token):
+         if self._frozen:
+             return
+         if token not in self.token_to_id:
+             self.token_to_id[token] = self.next_id
+             self.id_to_token[self.next_id] = token
+             self.next_id += 1
+ 
+     def get_id(self, token):
+         return self.token_to_id.get(token, self.token_to_id.get("<UNK>", -1))
+ 
+     def get_token(self, idx):
+         return self.id_to_token.get(idx, "<UNK>")
+ 
+     def freeze(self):
+         self._frozen = True
+         if "<UNK>" not in self.token_to_id:
+             self.add_token("<UNK>")
+ 
+     def save(self, filepath):
+diff --git a/wididatainterface.py b/wididatainterface.py
+index 513908b..6b0a5bc 100644
+--- a/wididatainterface.py
++++ b/wididatainterface.py
+@@ -1,26 +1,34 @@
++import os
++from dotenv import load_dotenv
++from SPARQLWrapper import SPARQLWrapper, JSON
++
+ class WikidataInterface:
+     def __init__(self, endpoint="https://query.wikidata.org/sparql"):
++        load_dotenv(os.path.expanduser("~/.env"))
++        api_key = os.getenv("OPENAI_API_KEY")
++        if not api_key:
++            raise ValueError("OPENAI_API_KEY not found in ~/.env")
+         self.endpoint = endpoint
+         self.sparql = SPARQLWrapper(endpoint)
+     
+     def _run_query(self, query):
+         self.sparql.setQuery(query)
+         self.sparql.setReturnFormat(JSON)
+         try:
+             return self.sparql.query().convert()
+         except Exception as e:
+             print("SPARQL query failed:", e)
+             return None
+     
+     def get_subclasses(self, concept_id):
+         query = f"""
+         SELECT ?item ?itemLabel WHERE {{
+             ?item wdt:P279* wd:{concept_id}.
+             SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en". }}
+         }}
+         """
+         results = self._run_query(query)
+         if results:
+             return [res['itemLabel']['value'] for res in results['results']['bindings']]
+         return []
+ 
+
