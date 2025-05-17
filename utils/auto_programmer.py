@@ -14,7 +14,7 @@ log = get_logger(__name__)
 log.debug("Starting auto_programmer.py")
 
 MAX_ATTEMPTS = 5
-OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "utils")
+OUTPUT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "utils")
 
 def generate_code(prompt):
     chatgpt = ChatGPTInterface()
@@ -88,7 +88,7 @@ def auto_program(filename, requirement):
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
-        log.error("Usage: python3 auto_programmer.py <filename.py> \"<requirement string>\"")
+        log.error("Usage: python3 utils/auto_programmer.py <filename.py> \"<requirement string>\"")
         sys.exit(1)
 
     filename = sys.argv[1]

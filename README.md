@@ -43,7 +43,7 @@ interface modules.
 
 6. **Utilities and Extra Scripts**
    - `utils/` contains small helpers for reading/writing text and JSONL files.
-   - `auto_programmer.py` uses ChatGPT to iteratively generate code, test it,
+   - `utils/auto_programmer.py` uses ChatGPT to iteratively generate code, test it,
      and save the result in `utils/` when it passes.
    - `rebuild_and_infer.sh` shows a workflow: delete old artifacts, train, then
      run inference.
@@ -65,8 +65,8 @@ interface modules.
 4. Explore `interface/chatgpt_interface.py` and
    `interface/wikidata_interface.py` if you want to integrate ChatGPT prompts or
    SPARQL queries.
-5. The `auto_programmer.py` script demonstrates how ChatGPT can iteratively
-   produce working Python utilities.
+5. The `utils/auto_programmer.py` script demonstrates how ChatGPT can
+   iteratively produce working Python utilities.
 
 ### What to Learn Next
 
