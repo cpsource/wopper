@@ -4,6 +4,10 @@ import torch
 from transformers import BertTokenizer
 from concept_inferencer import ConceptInferencer
 from vocab_manager import VocabManager
+from logger import get_logger
+
+log = get_logger(__name__)
+log.debug("Starting inference.py")
 
 
 def predict_concepts(sentence, model, tokenizer, vocab, device):
@@ -40,8 +44,8 @@ def main():
 
     # Predict
     subject, action, destination = predict_concepts(sentence, model, tokenizer, vocab, "cpu")
-    print(f"Sentence: {sentence}")
-    print(f"Subject: {subject}\nAction: {action}\nDestination: {destination}")
+    log.info(f"Sentence: {sentence}")
+    log.info(f"Subject: {subject}\nAction: {action}\nDestination: {destination}")
 
 
 if __name__ == "__main__":

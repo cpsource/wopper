@@ -65,7 +65,7 @@ def main():
     # Model, optimizer, loss
     model = ConceptInferencer().to(device)
 
-    print(model)
+    log.debug(model)
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
     criterion = nn.CrossEntropyLoss()
@@ -79,7 +79,7 @@ def main():
     for epoch in range(1, max_epochs + 1):
         loss = train(model, dataloader, optimizer, criterion, device)
         loss_history.append(loss)
-        print(f"Epoch {epoch}/{max_epochs} - Loss: {loss:.4f}")
+        log.info(f"Epoch {epoch}/{max_epochs} - Loss: {loss:.4f}")
 
         if loss < best_loss:
             best_loss = loss
@@ -89,7 +89,7 @@ def main():
             epochs_no_improve += 1
 
         if epochs_no_improve >= patience:
-            print(f"Early stopping after {epoch} epochs.")
+            log.info(f"Early stopping after {epoch} epochs.")
             break
 
     # Save the best model
@@ -97,7 +97,7 @@ def main():
         model.load_state_dict(best_model)
         torch.save(model.state_dict(), "concept_inferencer.pt")
         vocab.save("vocab.json")
-        print("Model and vocab saved.")
+        log.info("Model and vocab saved.")
 
     # Plot loss curve
     plt.plot(loss_history, label="Training Loss")

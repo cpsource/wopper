@@ -1,6 +1,10 @@
 import os
 from dotenv import load_dotenv
 from SPARQLWrapper import SPARQLWrapper, JSON
+from logger import get_logger
+
+log = get_logger(__name__)
+log.debug("Starting wikidata_interface.py")
 
 class WikidataInterface:
     def __init__(self, endpoint="https://query.wikidata.org/sparql"):
@@ -18,7 +22,7 @@ class WikidataInterface:
             results = self.sparql.query().convert()
             return results
         except Exception as e:
-            print("SPARQL query failed:", e)
+            log.error("SPARQL query failed: %s", e)
             return None
 
     def get_subclasses(self, concept_id):
@@ -57,7 +61,7 @@ if __name__ == "__main__":
     concept_id = "Q2134413"  # 'shop'
     subclasses = wikidata.get_subclasses(concept_id)
 
-    print(f"Subclasses of {concept_id} (shop):")
+    log.info(f"Subclasses of {concept_id} (shop):")
     for qid, label in subclasses[:15]:
-        print(f" - {label} ({qid})")
+        log.info(" - %s (%s)", label, qid)
 

@@ -4,6 +4,10 @@ import os
 from dotenv import load_dotenv
 import json
 from typing import List, Dict, Any
+from logger import get_logger
+
+log = get_logger(__name__)
+log.debug("Starting filetools.py")
 
 def ensure_dir(path: str):
     """Ensure that a directory exists."""
@@ -19,7 +23,7 @@ def read_jsonl(filepath: str) -> List[Dict[str, Any]]:
                 try:
                     data.append(json.loads(line))
                 except json.JSONDecodeError as e:
-                    print(f"Error parsing line: {line.strip()}\n{e}")
+                    log.error("Error parsing line: %s\n%s", line.strip(), e)
     return data
 
 
@@ -53,8 +57,8 @@ if __name__ == "__main__":
 
     write_jsonl(test_path, test_data)
     loaded = read_jsonl(test_path)
-    print("Read back:", loaded)
+    log.info("Read back: %s", loaded)
 
     write_text_file("example.txt", "Hello, filetools!")
-    print("Text read:", read_text_file("example.txt"))
+    log.info("Text read: %s", read_text_file("example.txt"))
 

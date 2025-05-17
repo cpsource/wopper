@@ -6,6 +6,10 @@ import re
 import subprocess
 import tempfile
 from interface.chatgpt_interface import ChatGPTInterface
+from logger import get_logger
+
+log = get_logger(__name__)
+log.debug("Starting auto_programmer-1.py")
 
 MAX_RETRIES = 5
 
@@ -40,24 +44,24 @@ def auto_generate_program(requirement):
     )
 
     for attempt in range(1, MAX_RETRIES + 1):
-        print(f"\nAttempt {attempt}...")
+        log.info(f"Attempt {attempt}...")
         reply = chat.ask(prompt)
         code = extract_code(reply)
 
         if not code:
-            print("No code block found in reply:", reply)
+            log.error("No code block found in reply: %s", reply)
             break
 
         file_path = write_temp_file(code)
         success, out, err = run_code(file_path)
 
         if success:
-            print("✅ Program passed test:")
-            print(out)
+            log.info("✅ Program passed test:")
+            log.info(out)
             return file_path
         else:
-            print("❌ Program failed. Stderr:")
-            print(err)
+            log.warning("❌ Program failed. Stderr:")
+            log.warning(err)
             prompt = (
                 "The following program failed to run correctly. Please fix it."
                 f"\n\nOriginal Requirement: {requirement}"
@@ -65,14 +69,14 @@ def auto_generate_program(requirement):
                 f"\n\nError Output:\n{err}"
             )
 
-    print("🚫 Failed after multiple attempts.")
+    log.error("🚫 Failed after multiple attempts.")
     return None
 
 
 if __name__ == "__main__":
     import sys
     if len(sys.argv) != 2:
-        print("Usage: python3 auto_programmer.py \"<requirement string>\"")
+        log.error("Usage: python3 auto_programmer.py \"<requirement string>\"")
     else:
         auto_generate_program(sys.argv[1])
 

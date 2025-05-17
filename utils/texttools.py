@@ -5,6 +5,10 @@ from dotenv import load_dotenv
 import re
 import string
 from typing import List
+from logger import get_logger
+
+log = get_logger(__name__)
+log.debug("Starting texttools.py")
 
 def normalize_text(text: str) -> str:
     """Lowercase, remove punctuation, and extra spaces."""
@@ -36,8 +40,8 @@ def unique_words(texts: List[str]) -> List[str]:
 # -----------------------------
 if __name__ == "__main__":
     sample = "The quick, brown fox jumps over the lazy dog!"
-    print("Normalized:", normalize_text(sample))
-    print("Tokens:", tokenize(sample))
-    print("Concepts:", extract_concepts(sample, stopwords=['the', 'over']))
-    print("Unique Words:", unique_words([sample, "The fox ran fast."]))
+    log.info("Normalized: %s", normalize_text(sample))
+    log.info("Tokens: %s", tokenize(sample))
+    log.info("Concepts: %s", extract_concepts(sample, stopwords=['the', 'over']))
+    log.info("Unique Words: %s", unique_words([sample, "The fox ran fast."]))
 

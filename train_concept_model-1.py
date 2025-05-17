@@ -6,6 +6,10 @@ from torch.utils.data import DataLoader
 from concept_inferencer import ConceptInferencer
 from dataset_loader import ConceptDataset
 from vocab_manager import VocabManager
+from logger import get_logger
+
+log = get_logger(__name__)
+log.debug("Starting train_concept_model-1.py")
 
 
 def train(model, dataloader, optimizer, criterion, device):
@@ -56,12 +60,12 @@ def main():
     # Training loop
     for epoch in range(1, epochs + 1):
         loss = train(model, dataloader, optimizer, criterion, device)
-        print(f"Epoch {epoch}/{epochs} - Loss: {loss:.4f}")
+        log.info(f"Epoch {epoch}/{epochs} - Loss: {loss:.4f}")
 
     # Save model
     torch.save(model.state_dict(), "concept_inferencer.pt")
     vocab.save("vocab.json")
-    print("Model and vocab saved.")
+    log.info("Model and vocab saved.")
 
 
 if __name__ == "__main__":

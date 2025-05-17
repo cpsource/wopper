@@ -1,6 +1,10 @@
 import os
 from dotenv import load_dotenv
 from openai import OpenAI
+from logger import get_logger
+
+log = get_logger(__name__)
+log.debug("Starting chatgpt_interface.py")
 
 class ChatGPTInterface:
     def __init__(self, model="gpt-4o"):
@@ -36,5 +40,5 @@ if __name__ == "__main__":
     bot = ChatGPTInterface()
     question = "What are some common types of grocery stores?"
     reply = bot.ask(question)
-    print("Response:\n" + reply)
+    log.info("Response:\n%s", reply)
 

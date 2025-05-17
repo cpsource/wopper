@@ -3,6 +3,10 @@ from dotenv import load_dotenv
 import torch
 import torch.nn as nn
 from transformers import BertTokenizer, BertModel
+from logger import get_logger
+
+log = get_logger(__name__)
+log.debug("Starting concept_inferencer.py")
 
 class ConceptInferencer(nn.Module):
     def __init__(self, hidden_dim=256):
@@ -43,9 +47,9 @@ def main():
     inputs = tokenizer(sentence, return_tensors="pt")
     subj, act, dest = model(inputs['input_ids'], inputs['attention_mask'])
 
-    print("Subject logits shape:", subj.shape)
-    print("Action logits shape:", act.shape)
-    print("Destination logits shape:", dest.shape)
+    log.info("Subject logits shape: %s", subj.shape)
+    log.info("Action logits shape: %s", act.shape)
+    log.info("Destination logits shape: %s", dest.shape)
 
 if __name__ == "__main__":
     main()

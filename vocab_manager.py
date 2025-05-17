@@ -3,6 +3,10 @@
 import json
 import os
 from dotenv import load_dotenv
+from logger import get_logger
+
+log = get_logger(__name__)
+log.debug("Starting vocab_manager.py")
 
 class VocabManager:
     def __init__(self):
@@ -52,10 +56,10 @@ if __name__ == "__main__":
         vm.add_token(word)
     vm.freeze()
 
-    print("Token to ID:", vm.token_to_id)
-    print("ID to Token:", vm.id_to_token)
-    print("ID for 'sat':", vm.get_id("sat"))
-    print("Token for ID 2:", vm.get_token(2))
+    log.info("Token to ID: %s", vm.token_to_id)
+    log.info("ID to Token: %s", vm.id_to_token)
+    log.info("ID for 'sat': %s", vm.get_id("sat"))
+    log.info("Token for ID 2: %s", vm.get_token(2))
 
     vm.save("test_vocab.json")
-    print("Saved vocab to test_vocab.json")
+    log.info("Saved vocab to test_vocab.json")

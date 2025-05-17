@@ -7,6 +7,10 @@ import subprocess
 import tempfile
 import traceback
 from interface.chatgpt_interface import ChatGPTInterface
+from logger import get_logger
+
+log = get_logger(__name__)
+log.debug("Starting auto_programmer.py")
 
 MAX_ATTEMPTS = 5
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "utils")
@@ -46,7 +50,7 @@ def auto_program(filename, requirement):
     total_tokens = 0
 
     for attempt in range(1, MAX_ATTEMPTS + 1):
-        print(f"\nAttempt {attempt}...")
+        log.info(f"Attempt {attempt}...")
         response, tokens = generate_code(
             f"Write a Python program for the following requirement. Be sure to include a main() that tests the function: {requirement}"
         )
@@ -59,31 +63,31 @@ def auto_program(filename, requirement):
             tmp.write(code.encode("utf-8"))
             tmp_path = tmp.name
 
-        print("Testing generated code...")
+        log.debug("Testing generated code...")
         passed, output = run_code(tmp_path)
 
         if passed:
-            print("Test passed. Saving to utils/...\n")
+            log.info("Test passed. Saving to utils/...\n")
             output_path = os.path.join(OUTPUT_DIR, filename)
             with open(output_path, "w") as f:
                 f.write(code)
             os.remove(tmp_path)
-            print(f"Saved to: {output_path}")
-            print(f"Total tokens used: {total_tokens}")
+            log.info(f"Saved to: {output_path}")
+            log.info(f"Total tokens used: {total_tokens}")
             return
         else:
-            print("Test failed:")
-            print(output)
+            log.warning("Test failed:")
+            log.warning(output)
             new_prompt = f"The following code failed with this error. Fix it and return a working version:\n\n{code}\n\nERROR:\n{output}"
             response, tokens = generate_code(new_prompt)
             total_tokens += tokens if isinstance(tokens, int) else 0
 
-    print("❌ All attempts failed. Giving up.")
-    print(f"Total tokens used: {total_tokens}")
+    log.error("❌ All attempts failed. Giving up.")
+    log.info(f"Total tokens used: {total_tokens}")
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
-        print("Usage: python3 auto_programmer.py <filename.py> \"<requirement string>\"")
+        log.error("Usage: python3 auto_programmer.py <filename.py> \"<requirement string>\"")
         sys.exit(1)
 
     filename = sys.argv[1]

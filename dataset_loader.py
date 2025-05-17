@@ -6,6 +6,10 @@ from dotenv import load_dotenv
 import torch
 from torch.utils.data import Dataset
 from transformers import BertTokenizer
+from logger import get_logger
+
+log = get_logger(__name__)
+log.debug("Starting dataset_loader.py")
 
 class ConceptDataset(Dataset):
     def __init__(self, jsonl_file, vocab_manager):
@@ -36,8 +40,9 @@ class ConceptDataset(Dataset):
                     action_id = self.vocab.get_id(action)
                     destination_id = self.vocab.get_id(destination)
 
-                    # Debug print
-                    print(f"[Line {line_num}] {sentence} → subj: {subject_id} ({subject}), act: {action_id} ({action}), dest: {destination_id} ({destination})")
+                    log.debug(
+                        f"[Line {line_num}] {sentence} → subj: {subject_id} ({subject}), act: {action_id} ({action}), dest: {destination_id} ({destination})"
+                    )
 
                     self.data.append({
                         'input_ids': tokenized['input_ids'].squeeze(0),
@@ -47,7 +52,7 @@ class ConceptDataset(Dataset):
                         'destination_id': destination_id
                     })
                 except Exception as e:
-                    print(f"Error parsing line {line_num}: {e}")
+                    log.error(f"Error parsing line {line_num}: {e}")
 
     def __len__(self):
         return len(self.data)
