@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 from concept_inferencer import ConceptInferencer
 from dataset_loader import ConceptDataset
 from vocab_manager import VocabManager
-from logger import get_logger
+from utils.logger import get_logger
 
 log = get_logger(__name__)
 log.debug("Starting train_concept_model-1.py")

@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 import re
 import string
 from typing import List
-from logger import get_logger
+from utils.logger import get_logger
 
 log = get_logger(__name__)
 log.debug("Starting texttools.py")

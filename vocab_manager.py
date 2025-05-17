@@ -4,7 +4,7 @@
 import json
 import os
 from dotenv import load_dotenv
-from logger import get_logger
+from utils.logger import get_logger
 
 log = get_logger(__name__)
 log.debug("Starting vocab_manager.py")
