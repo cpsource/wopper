@@ -1,4 +1,5 @@
 # wopper/test/wopper_test.py
+# Basic smoke tests for the Wikidata interface and placeholders for future tests.
 
 import sys
 import os

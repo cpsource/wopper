@@ -1,3 +1,4 @@
+# Simple training script for the ConceptInferencer model.
 import os
 from dotenv import load_dotenv
 import torch

@@ -1,3 +1,4 @@
+# Neural model using BERT to predict subject, action and destination.
 import os
 from dotenv import load_dotenv
 import torch

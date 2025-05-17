@@ -1,3 +1,4 @@
+# Runs the trained model to predict concepts from a sentence.
 import os
 from dotenv import load_dotenv
 import torch

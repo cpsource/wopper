@@ -1,4 +1,5 @@
 # texttools.py
+# Text normalization and tokenization helper functions.
 
 import os
 from dotenv import load_dotenv

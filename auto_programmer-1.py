@@ -1,4 +1,5 @@
 # auto_programmer.py
+# Automatically generates and tests Python code using ChatGPT.
 
 import os
 from dotenv import load_dotenv

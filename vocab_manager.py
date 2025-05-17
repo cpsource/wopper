@@ -1,4 +1,5 @@
 # vocab_manager.py
+# Manages mappings between tokens and integer IDs.
 
 import json
 import os
