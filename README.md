@@ -47,6 +47,8 @@ interface modules.
      and save the result in `utils/` when it passes.
    - `rebuild_and_infer.sh` shows a workflow: delete old artifacts, train, then
      run inference.
+   - `drive_scorer/` contains a simple drive scoring utility. Run
+     `word-assoc.py` to estimate how a sentence aligns with ten basic drives.
 
 ### Documentation & Tests
 
