@@ -97,7 +97,7 @@ def main():
 
     # Training loop
     model.train()
-    for epoch in range(25):
+    for epoch in range(35):
         total_loss = 0.0
         for i in range(len(inputs)):
             x = inputs[i].unsqueeze(0)
