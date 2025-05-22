@@ -17,6 +17,8 @@ class ConceptInferencer(nn.Module):
             raise ValueError("OPENAI_API_KEY not found in ~/.env")
         super(ConceptInferencer, self).__init__()
         self.bert = BertModel.from_pretrained('bert-base-uncased')
+        for param in self.bert.parameters():
+            param.requires_grad = False
         self.hidden = nn.Linear(self.bert.config.hidden_size, hidden_dim)
         self.relu = nn.ReLU()
 
