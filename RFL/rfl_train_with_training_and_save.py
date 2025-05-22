@@ -114,7 +114,10 @@ def main():
         "freedom", "fear", "truth", "knowledge", "emotion",
         "constraint", "love", "loss", "ambiguity", "intuition"
     ]
-    seed_rfl_with_concepts(model, concepts, frontend.encode)
+    # ``seed_rfl_with_concepts`` expects an encoding function that optionally
+    # takes a dimension argument. Wrap ``frontend.encode`` so it matches that
+    # signature without altering the original method.
+    seed_rfl_with_concepts(model, concepts, lambda text, *_: frontend.encode(text))
 
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 
