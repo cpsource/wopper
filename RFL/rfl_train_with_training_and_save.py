@@ -50,18 +50,20 @@ class RFLNet(nn.Module):
 class BERTFrontend(nn.Module):
     """Encodes text using a pretrained BERT model and projects to ``output_dim``."""
 
-    def __init__(self, output_dim: int = 128):
+    def __init__(self, output_dim: int = 128, device: torch.device | str = "cpu"):
         super().__init__()
+        self.device = torch.device(device)
         self.tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
         self.bert = BertModel.from_pretrained("bert-base-uncased")
         for p in self.bert.parameters():
             p.requires_grad = False
-        self.proj = nn.Linear(self.bert.config.hidden_size, output_dim)
+        self.bert.to(self.device)
+        self.proj = nn.Linear(self.bert.config.hidden_size, output_dim).to(self.device)
 
     def encode(self, text: str) -> torch.Tensor:
         tokens = self.tokenizer(
             text, return_tensors="pt", truncation=True, padding=True
-        )
+        ).to(self.device)
         with torch.no_grad():
             vec = self.bert(**tokens).pooler_output
         return self.proj(vec).squeeze(0)
@@ -69,7 +71,7 @@ class BERTFrontend(nn.Module):
     def forward(self, texts):
         tokens = self.tokenizer(
             list(texts), return_tensors="pt", truncation=True, padding=True
-        )
+        ).to(self.device)
         with torch.no_grad():
             vec = self.bert(**tokens).pooler_output
         return self.proj(vec)
@@ -87,6 +89,11 @@ def rfl_loss(output, target, resonance_stack, alpha=1.0, beta=0.1):
 from training_texts import training_texts
 
 def main():
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    if torch.cuda.is_available():
+        print("GPU detected. Training will run on GPU.")
+    else:
+        print("No GPU detected. Training will run on CPU.")
 
     # Concept seeds used for the RFL models
     concepts = [
@@ -110,13 +117,13 @@ def main():
 
     # Build the frontend used to encode text with BERT.
     input_dim = 128
-    frontend = BERTFrontend(input_dim)
-    targets = torch.tensor(labels)
+    frontend = BERTFrontend(input_dim, device=device)
+    targets = torch.tensor(labels, device=device)
 
     # Model setup
     hidden_dim = 64
     depth = 4
-    model = RFLNet(input_dim, hidden_dim, depth, len(concepts))
+    model = RFLNet(input_dim, hidden_dim, depth, len(concepts)).to(device)
 
     from init_rfl_weights import init_rfl_weights
 
@@ -159,7 +166,7 @@ def main():
             x = frontend([text])
             pred = model(x)
             print(
-                f'"{text}" → Prediction: {pred.squeeze(0).tolist()} '
+                f'"{text}" → Prediction: {pred.cpu().squeeze(0).tolist()} '
                 f"(Label: {labels[i]})"
             )
 
