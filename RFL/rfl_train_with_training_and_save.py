@@ -4,6 +4,7 @@ import torch.nn.functional as F
 from transformers import BertTokenizer, BertModel
 from difflib import SequenceMatcher
 
+from training_texts import training_texts
 
 class RFLBlock(nn.Module):
     def __init__(self, input_dim, hidden_dim):
@@ -87,17 +88,19 @@ def rfl_loss(output, target, resonance_stack, alpha=1.0, beta=0.1):
 
 def main():
     # Define training examples from categories 2, 3, and 5
-    training_texts = [
-        "Freedom is the absence of fear",
-        "Unchained thought breathes easiest",
-        "He walked without caution or chains",
-        "She believed in truth",
-        "She questioned the facts",
-        "She deleted the evidence",
-        "Knowledge is stored in books",
-        "Books are libraries compressed",
-        "Memory is a library made of synapses",
-    ]
+
+    
+#    training_texts = [
+#        "Freedom is the absence of fear",
+#        "Unchained thought breathes easiest",
+#        "He walked without caution or chains",
+#        "She believed in truth",
+#        "She questioned the facts",
+#        "She deleted the evidence",
+#        "Knowledge is stored in books",
+#        "Books are libraries compressed",
+#        "Memory is a library made of synapses",
+#    ]
 
     # Concept seeds used for the RFL models
     concepts = [
@@ -147,11 +150,12 @@ def main():
     # signature without altering the original method.
     seed_rfl_with_concepts(model, concepts, lambda text, *_: frontend.encode(text))
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+#    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+    optimizer = torch.optim.Adam(model.parameters(), lr=10)
 
     # Training loop
     model.train()
-    for epoch in range(35):
+    for epoch in range(10):
         total_loss = 0.0
         for i in range(len(inputs)):
             x = inputs[i].unsqueeze(0)
