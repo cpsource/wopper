@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from transformers import BertTokenizer, BertModel
+from difflib import SequenceMatcher
+
 
 class RFLBlock(nn.Module):
     def __init__(self, input_dim, hidden_dim):
@@ -21,13 +23,17 @@ class RFLBlock(nn.Module):
 
         return h
 
+
 class RFLNet(nn.Module):
-    def __init__(self, input_dim, hidden_dim, depth):
+    def __init__(self, input_dim, hidden_dim, depth, num_outputs: int = 1):
         super(RFLNet, self).__init__()
-        self.blocks = nn.ModuleList([
-            RFLBlock(input_dim if i == 0 else hidden_dim, hidden_dim) for i in range(depth)
-        ])
-        self.final = nn.Linear(hidden_dim, 1)
+        self.blocks = nn.ModuleList(
+            [
+                RFLBlock(input_dim if i == 0 else hidden_dim, hidden_dim)
+                for i in range(depth)
+            ]
+        )
+        self.final = nn.Linear(hidden_dim, num_outputs)
 
     def forward(self, x, return_resonance=False):
         resonance = None
@@ -53,16 +59,21 @@ class BERTFrontend(nn.Module):
         self.proj = nn.Linear(self.bert.config.hidden_size, output_dim)
 
     def encode(self, text: str) -> torch.Tensor:
-        tokens = self.tokenizer(text, return_tensors="pt", truncation=True, padding=True)
+        tokens = self.tokenizer(
+            text, return_tensors="pt", truncation=True, padding=True
+        )
         with torch.no_grad():
             vec = self.bert(**tokens).pooler_output
         return self.proj(vec).squeeze(0)
 
     def forward(self, texts):
-        tokens = self.tokenizer(list(texts), return_tensors="pt", truncation=True, padding=True)
+        tokens = self.tokenizer(
+            list(texts), return_tensors="pt", truncation=True, padding=True
+        )
         with torch.no_grad():
             vec = self.bert(**tokens).pooler_output
         return self.proj(vec)
+
 
 def rfl_loss(output, target, resonance_stack, alpha=1.0, beta=0.1):
     task_loss = F.binary_cross_entropy(output, target)
@@ -85,11 +96,28 @@ def main():
         "She deleted the evidence",
         "Knowledge is stored in books",
         "Books are libraries compressed",
-        "Memory is a library made of synapses"
+        "Memory is a library made of synapses",
     ]
 
-    # Assign labels: first group 1.0, second group 0.0, third group 1.0
-    labels = [1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0]
+    # Concept seeds used for the RFL models
+    concepts = [
+        "freedom",
+        "fear",
+        "truth",
+        "knowledge",
+        "emotion",
+        "constraint",
+        "love",
+        "loss",
+        "ambiguity",
+        "intuition",
+    ]
+
+    # Generate similarity-based labels for each concept
+    def _similarity(a: str, b: str) -> float:
+        return SequenceMatcher(None, a.lower(), b.lower()).ratio()
+
+    labels = [[_similarity(text, c) for c in concepts] for text in training_texts]
 
     # Convert text to feature vectors using BERT
     input_dim = 128
@@ -99,12 +127,12 @@ def main():
     # reused across epochs.
     with torch.no_grad():
         inputs = frontend(training_texts)
-    targets = torch.tensor(labels).unsqueeze(1)
+    targets = torch.tensor(labels)
 
     # Model setup
     hidden_dim = 64
     depth = 4
-    model = RFLNet(input_dim, hidden_dim, depth)
+    model = RFLNet(input_dim, hidden_dim, depth, len(concepts))
 
     from init_rfl_weights import init_rfl_weights
 
@@ -114,10 +142,6 @@ def main():
 
     # precondition model for our concepts
     # 👇 Seed the first layer with your concept priors
-    concepts = [
-        "freedom", "fear", "truth", "knowledge", "emotion",
-        "constraint", "love", "loss", "ambiguity", "intuition"
-    ]
     # ``seed_rfl_with_concepts`` expects an encoding function that optionally
     # takes a dimension argument. Wrap ``frontend.encode`` so it matches that
     # signature without altering the original method.
@@ -150,7 +174,11 @@ def main():
         for i, text in enumerate(training_texts):
             x = inputs[i].unsqueeze(0)
             pred = model(x)
-            print(f'"{text}" → Prediction: {pred.item():.4f} (Label: {labels[i]})')
+            print(
+                f'"{text}" → Prediction: {pred.squeeze(0).tolist()} '
+                f"(Label: {labels[i]})"
+            )
+
 
 if __name__ == "__main__":
     main()
