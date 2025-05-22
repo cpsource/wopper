@@ -37,13 +37,16 @@ def main() -> None:
         "intuition",
     ]
 
-    ranked = []
+    results = []
     for text in training_texts:
         scores = [(c, similarity(text, c)) for c in concepts]
         scores.sort(key=lambda x: x[1], reverse=True)
-        ranked.append([c for c, _ in scores])
+        results.append((text, scores))
 
-    print(ranked)
+    for text, scores in results:
+        print(f"\n{text!r}")
+        for concept, score in scores:
+            print(f"  {concept:<10} {score:.3f}")
 
 
 if __name__ == "__main__":  # pragma: no cover - manual invocation
