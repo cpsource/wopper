@@ -4,6 +4,7 @@ import torch.nn.functional as F
 import os
 from transformers import BertTokenizer, BertModel
 
+
 class RFLBlock(nn.Module):
     def __init__(self, input_dim, hidden_dim):
         super(RFLBlock, self).__init__()
@@ -22,13 +23,17 @@ class RFLBlock(nn.Module):
 
         return h
 
+
 class RFLNet(nn.Module):
-    def __init__(self, input_dim, hidden_dim, depth):
+    def __init__(self, input_dim, hidden_dim, depth, num_outputs: int = 1):
         super(RFLNet, self).__init__()
-        self.blocks = nn.ModuleList([
-            RFLBlock(input_dim if i == 0 else hidden_dim, hidden_dim) for i in range(depth)
-        ])
-        self.final = nn.Linear(hidden_dim, 1)
+        self.blocks = nn.ModuleList(
+            [
+                RFLBlock(input_dim if i == 0 else hidden_dim, hidden_dim)
+                for i in range(depth)
+            ]
+        )
+        self.final = nn.Linear(hidden_dim, num_outputs)
 
     def forward(self, x, return_resonance=False):
         resonance = None
@@ -54,13 +59,17 @@ class BERTFrontend(nn.Module):
         self.proj = nn.Linear(self.bert.config.hidden_size, output_dim)
 
     def encode(self, text: str) -> torch.Tensor:
-        tokens = self.tokenizer(text, return_tensors="pt", truncation=True, padding=True)
+        tokens = self.tokenizer(
+            text, return_tensors="pt", truncation=True, padding=True
+        )
         with torch.no_grad():
             vec = self.bert(**tokens).pooler_output
         return self.proj(vec).squeeze(0)
 
     def forward(self, texts):
-        tokens = self.tokenizer(list(texts), return_tensors="pt", truncation=True, padding=True)
+        tokens = self.tokenizer(
+            list(texts), return_tensors="pt", truncation=True, padding=True
+        )
         with torch.no_grad():
             vec = self.bert(**tokens).pooler_output
         return self.proj(vec)
@@ -71,7 +80,7 @@ def main():
     test_texts = [
         "Freedom is the absence of fear",
         "Unchained thought breathes easiest",
-        "He walked without caution or chains"
+        "He walked without caution or chains",
     ]
 
     input_dim = 128
@@ -79,10 +88,23 @@ def main():
     depth = 4
     model_path = "rfl_trained.pt"
 
+    concepts = [
+        "freedom",
+        "fear",
+        "truth",
+        "knowledge",
+        "emotion",
+        "constraint",
+        "love",
+        "loss",
+        "ambiguity",
+        "intuition",
+    ]
+
     frontend = BERTFrontend(input_dim)
 
     # Instantiate and load pretrained model
-    model = RFLNet(input_dim, hidden_dim, depth)
+    model = RFLNet(input_dim, hidden_dim, depth, len(concepts))
     if os.path.exists(model_path):
         model.load_state_dict(torch.load(model_path))
         print(f"Loaded pretrained model from {model_path}")
@@ -98,7 +120,8 @@ def main():
         for text in test_texts:
             x = frontend.encode(text).unsqueeze(0)
             pred = model(x)
-            print(f'"{text}" → Prediction: {pred.item():.4f}')
+            print(f'"{text}" → Prediction: {pred.squeeze(0).tolist()}')
+
 
 if __name__ == "__main__":
     main()
