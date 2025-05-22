@@ -78,11 +78,26 @@ def main():
     hidden_dim = 64
     depth = 4
     model = RFLNet(input_dim, hidden_dim, depth)
+
+    from init_rfl_weights import init_rfl_weights
+
+    model.apply(init_rfl_weights)  # 👈 apply custom weight initialization here
+
+    from seed_rfl_with_concepts import seed_rfl_with_concepts
+
+    # precondition model for our concepts
+    # 👇 Seed the first layer with your concept priors
+    concepts = [
+        "freedom", "fear", "truth", "knowledge", "emotion",
+        "constraint", "love", "loss", "ambiguity", "intuition"
+    ]
+    seed_rfl_with_concepts(model, concepts, encode_text_to_vector)
+
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 
     # Training loop
     model.train()
-    for epoch in range(5):
+    for epoch in range(25):
         total_loss = 0.0
         for i in range(len(inputs)):
             x = inputs[i].unsqueeze(0)
