@@ -4,7 +4,6 @@ import torch.nn.functional as F
 from transformers import BertTokenizer, BertModel
 from difflib import SequenceMatcher
 
-from training_texts import training_texts
 
 class RFLBlock(nn.Module):
     def __init__(self, input_dim, hidden_dim):
@@ -85,22 +84,9 @@ def rfl_loss(output, target, resonance_stack, alpha=1.0, beta=0.1):
     resonance_loss = resonance_loss / (len(resonance_stack) - 1)
     return alpha * task_loss + beta * resonance_loss
 
+from training_texts import training_texts
 
 def main():
-    # Define training examples from categories 2, 3, and 5
-
-    
-#    training_texts = [
-#        "Freedom is the absence of fear",
-#        "Unchained thought breathes easiest",
-#        "He walked without caution or chains",
-#        "She believed in truth",
-#        "She questioned the facts",
-#        "She deleted the evidence",
-#        "Knowledge is stored in books",
-#        "Books are libraries compressed",
-#        "Memory is a library made of synapses",
-#    ]
 
     # Concept seeds used for the RFL models
     concepts = [
@@ -122,14 +108,9 @@ def main():
 
     labels = [[_similarity(text, c) for c in concepts] for text in training_texts]
 
-    # Convert text to feature vectors using BERT
+    # Build the frontend used to encode text with BERT.
     input_dim = 128
     frontend = BERTFrontend(input_dim)
-    # Precompute the BERT features without tracking gradients. Otherwise the
-    # ``inputs`` tensor retains a computation graph which causes an error when
-    # reused across epochs.
-    with torch.no_grad():
-        inputs = frontend(training_texts)
     targets = torch.tensor(labels)
 
     # Model setup
@@ -150,15 +131,14 @@ def main():
     # signature without altering the original method.
     seed_rfl_with_concepts(model, concepts, lambda text, *_: frontend.encode(text))
 
-#    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
-    optimizer = torch.optim.Adam(model.parameters(), lr=10)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 
     # Training loop
     model.train()
-    for epoch in range(10):
+    for epoch in range(100):
         total_loss = 0.0
-        for i in range(len(inputs)):
-            x = inputs[i].unsqueeze(0)
+        for i, text in enumerate(training_texts):
+            x = frontend([text])
             y = targets[i]
             optimizer.zero_grad()
             preds, resonance_stack = model(x, return_resonance=True)
@@ -176,7 +156,7 @@ def main():
     model.eval()
     with torch.no_grad():
         for i, text in enumerate(training_texts):
-            x = inputs[i].unsqueeze(0)
+            x = frontend([text])
             pred = model(x)
             print(
                 f'"{text}" → Prediction: {pred.squeeze(0).tolist()} '
