@@ -94,7 +94,11 @@ def main():
     # Convert text to feature vectors using BERT
     input_dim = 128
     frontend = BERTFrontend(input_dim)
-    inputs = frontend(training_texts)
+    # Precompute the BERT features without tracking gradients. Otherwise the
+    # ``inputs`` tensor retains a computation graph which causes an error when
+    # reused across epochs.
+    with torch.no_grad():
+        inputs = frontend(training_texts)
     targets = torch.tensor(labels).unsqueeze(1)
 
     # Model setup
