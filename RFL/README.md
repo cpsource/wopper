@@ -44,8 +44,9 @@ listing core tenets such as "Approximation Is Structure" and "Resonant Convergen
   examples.【F:RFL/model.py†L1-L49】
 - **`rfl_test_echo_examples.py`** – runs inference on short phrases to see the
   model’s raw predictions.【F:RFL/rfl_test_echo_examples.py†L46-L69】
-- **`rfl_test_with_pretrained.py`** – loads `rfl_trained.pt` if available and
-  evaluates the same phrases.【F:RFL/rfl_test_with_pretrained.py†L44-L75】
+- **`rfl_test_with_pretrained.py`** – expects the pretrained file `rfl_trained.pt`
+  and raises an error if it's missing before evaluating the sample phrases.
+  【F:RFL/rfl_test_with_pretrained.py†L44-L75】
 - **`test_rfl_model.py`** – simple `unittest` ensuring the model’s forward pass
   outputs a 0‑1 score.【F:RFL/test_rfl_model.py†L1-L22】
 - **`usage_example.py`** – short snippet showing how to instantiate

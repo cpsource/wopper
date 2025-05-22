@@ -87,7 +87,9 @@ def main():
         model.load_state_dict(torch.load(model_path))
         print(f"Loaded pretrained model from {model_path}")
     else:
-        print(f"Pretrained model not found at {model_path}. Using untrained model.")
+        raise FileNotFoundError(
+            f"Pretrained model not found at {model_path}. Please train the model first."
+        )
 
     model.eval()
 
