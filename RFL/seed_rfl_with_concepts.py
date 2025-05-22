@@ -1,5 +1,19 @@
 import torch
 
+
+def _call_encode(encode_fn, concept, input_dim):
+    """Call ``encode_fn`` with a flexible signature.
+
+    Some encoding utilities expect both the concept and a target dimension,
+    while others (e.g. ``BERTFrontend.encode``) only need the concept text.
+    This helper tries the two-argument call first and falls back to a
+    single-argument call if necessary.
+    """
+    try:
+        return encode_fn(concept, input_dim)
+    except TypeError:
+        return encode_fn(concept)
+
 def seed_rfl_with_concepts(model, concept_list, encode_fn):
     """
     Seeds the first RFLBlock in the model with concept vectors.
@@ -18,6 +32,7 @@ def seed_rfl_with_concepts(model, concept_list, encode_fn):
             if i >= num_neurons:
                 print(f"Warning: More concepts ({len(concept_list)}) than neurons ({num_neurons}). Truncating.")
                 break
-            vec = encode_fn(concept, input_dim)
+            vec = _call_encode(encode_fn, concept, input_dim)
             first_block.proj_input.weight[i].copy_(vec)
-            first_block.proj_input.bias[i] = 1.0  # Optional: encourage early activation
+            # Optional: encourage early activation
+            first_block.proj_input.bias[i] = 1.0
