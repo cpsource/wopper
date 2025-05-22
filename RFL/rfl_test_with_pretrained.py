@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import os
+from transformers import BertTokenizer, BertModel
 
 class RFLBlock(nn.Module):
     def __init__(self, input_dim, hidden_dim):
@@ -40,9 +41,30 @@ class RFLNet(nn.Module):
         out = torch.sigmoid(self.final(x))
         return (out, resonance_stack) if return_resonance else out
 
-def encode_text_to_vector(text, dim=128):
-    torch.manual_seed(abs(hash(text)) % (2**32))  # Simple deterministic encoding
-    return torch.randn(dim)
+
+class BERTFrontend(nn.Module):
+    """Encodes text with BERT and projects to ``output_dim`` for the RFL network."""
+
+    def __init__(self, output_dim: int = 128):
+        super().__init__()
+        self.tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+        self.bert = BertModel.from_pretrained("bert-base-uncased")
+        for p in self.bert.parameters():
+            p.requires_grad = False
+        self.proj = nn.Linear(self.bert.config.hidden_size, output_dim)
+
+    def encode(self, text: str) -> torch.Tensor:
+        tokens = self.tokenizer(text, return_tensors="pt", truncation=True, padding=True)
+        with torch.no_grad():
+            vec = self.bert(**tokens).pooler_output
+        return self.proj(vec).squeeze(0)
+
+    def forward(self, texts):
+        tokens = self.tokenizer(list(texts), return_tensors="pt", truncation=True, padding=True)
+        with torch.no_grad():
+            vec = self.bert(**tokens).pooler_output
+        return self.proj(vec)
+
 
 def main():
     # Test examples (Echo Reinforcement)
@@ -57,6 +79,8 @@ def main():
     depth = 4
     model_path = "rfl_trained.pt"
 
+    frontend = BERTFrontend(input_dim)
+
     # Instantiate and load pretrained model
     model = RFLNet(input_dim, hidden_dim, depth)
     if os.path.exists(model_path):
@@ -70,7 +94,7 @@ def main():
     # Predict
     with torch.no_grad():
         for text in test_texts:
-            x = encode_text_to_vector(text, input_dim).unsqueeze(0)
+            x = frontend.encode(text).unsqueeze(0)
             pred = model(x)
             print(f'"{text}" → Prediction: {pred.item():.4f}')
 

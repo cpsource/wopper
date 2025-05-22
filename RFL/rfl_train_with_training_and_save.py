@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from transformers import BertTokenizer, BertModel
 
 class RFLBlock(nn.Module):
     def __init__(self, input_dim, hidden_dim):
@@ -39,6 +40,30 @@ class RFLNet(nn.Module):
         out = torch.sigmoid(self.final(x))
         return (out, resonance_stack) if return_resonance else out
 
+
+class BERTFrontend(nn.Module):
+    """Encodes text using a pretrained BERT model and projects to ``output_dim``."""
+
+    def __init__(self, output_dim: int = 128):
+        super().__init__()
+        self.tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+        self.bert = BertModel.from_pretrained("bert-base-uncased")
+        for p in self.bert.parameters():
+            p.requires_grad = False
+        self.proj = nn.Linear(self.bert.config.hidden_size, output_dim)
+
+    def encode(self, text: str) -> torch.Tensor:
+        tokens = self.tokenizer(text, return_tensors="pt", truncation=True, padding=True)
+        with torch.no_grad():
+            vec = self.bert(**tokens).pooler_output
+        return self.proj(vec).squeeze(0)
+
+    def forward(self, texts):
+        tokens = self.tokenizer(list(texts), return_tensors="pt", truncation=True, padding=True)
+        with torch.no_grad():
+            vec = self.bert(**tokens).pooler_output
+        return self.proj(vec)
+
 def rfl_loss(output, target, resonance_stack, alpha=1.0, beta=0.1):
     task_loss = F.binary_cross_entropy(output, target)
     resonance_loss = 0.0
@@ -48,9 +73,6 @@ def rfl_loss(output, target, resonance_stack, alpha=1.0, beta=0.1):
     resonance_loss = resonance_loss / (len(resonance_stack) - 1)
     return alpha * task_loss + beta * resonance_loss
 
-def encode_text_to_vector(text, dim=128):
-    torch.manual_seed(abs(hash(text)) % (2**32))  # simple deterministic encoding
-    return torch.randn(dim)
 
 def main():
     # Define training examples from categories 2, 3, and 5
@@ -69,9 +91,10 @@ def main():
     # Assign labels: first group 1.0, second group 0.0, third group 1.0
     labels = [1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0]
 
-    # Convert text to feature vectors
+    # Convert text to feature vectors using BERT
     input_dim = 128
-    inputs = torch.stack([encode_text_to_vector(t, input_dim) for t in training_texts])
+    frontend = BERTFrontend(input_dim)
+    inputs = frontend(training_texts)
     targets = torch.tensor(labels).unsqueeze(1)
 
     # Model setup
@@ -91,7 +114,7 @@ def main():
         "freedom", "fear", "truth", "knowledge", "emotion",
         "constraint", "love", "loss", "ambiguity", "intuition"
     ]
-    seed_rfl_with_concepts(model, concepts, encode_text_to_vector)
+    seed_rfl_with_concepts(model, concepts, frontend.encode)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 
