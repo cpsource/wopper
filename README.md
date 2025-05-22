@@ -25,9 +25,13 @@ interface modules.
      input sentence.
 
 3. **Training**
-   - `train_concept_model.py` loads the dataset, trains the model with
-     early-stopping, and saves the resulting weights plus the vocabulary. It
-     logs progress and plots a loss curve at the end.
+   - `train_concept_model.py` begins with a concept-based pretraining step that
+     initializes the model's weights and biases so it is already sensitive to
+     specific concepts. This shortens the overall training time because the
+     network starts with relevant knowledge.
+   - After pretraining, the script trains with early-stopping and saves the
+     resulting weights along with the vocabulary. It logs progress and plots a
+     loss curve at the end.
 
 4. **Inference**
    - `inference.py` demonstrates running the saved model on a sentence. It
