@@ -128,14 +128,14 @@ training_texts = []
 #    training_texts.append(f"Statement about {concept} number {i + 1}.")
 
 # Generic short sentences across many topics
-for i in range(1000):
+for i in range(25):
     s = _subjects[i % len(_subjects)]
     v = _verbs[i % len(_verbs)]
     o = _objects[i % len(_objects)]
     training_texts.append(f"{s} {v} {o}.")
 
 # Safety check so consumers can rely on the exact size
-assert len(training_texts) == 1000
+assert len(training_texts) == 25 
 
 if __name__ == "__main__":  # pragma: no cover - manual inspection
 #    print(len(training_texts))
