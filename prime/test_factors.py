@@ -12,7 +12,7 @@ class DeepBinaryNet(nn.Module):
         super().__init__()
         layers = [nn.Linear(input_dim, hidden_dim), nn.ReLU()]
         for _ in range(num_hidden_layers - 1):
-            layers += [nn.Linear(hidden_dim, hidden_dim), nn.ReLU()]
+            layers += [nn.Linear(hidden_dim, hidden_dim), nn.Tanh()]
         layers += [nn.Linear(hidden_dim, output_dim), nn.Sigmoid()]
         self.model = nn.Sequential(*layers)
 
@@ -50,6 +50,8 @@ with torch.no_grad():
 
         y_pred = model(x).squeeze().round()
 
+        print(f"y_pred {y_pred}, y_true = {y_true}")
+        
         if torch.equal(y_pred, y_true):
             correct += 1
         total += 1

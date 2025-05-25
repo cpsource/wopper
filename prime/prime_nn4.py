@@ -38,9 +38,9 @@ class PrimeDataset(Dataset):
 class DeepBinaryNet(nn.Module):
     def __init__(self, input_dim=20, hidden_dim=100, output_dim=10, num_hidden_layers=10):
         super().__init__()
-        layers = [nn.Linear(input_dim, hidden_dim), nn.ReLU()]
+        layers = [nn.Linear(input_dim, hidden_dim), nn.Sigmoid()]
         for _ in range(num_hidden_layers - 1):
-            layers += [nn.Linear(hidden_dim, hidden_dim), nn.ReLU()]
+            layers += [nn.Linear(hidden_dim, hidden_dim), nn.Tanh()]
         layers += [nn.Linear(hidden_dim, output_dim), nn.Sigmoid()]
         self.model = nn.Sequential(*layers)
 

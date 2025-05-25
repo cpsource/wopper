@@ -9,6 +9,12 @@ from torch.utils.data import Dataset, DataLoader
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"✅ Using device: {device}")
 
+# Step 1: Define the initializer function
+def custom_init(m):
+    if isinstance(m, nn.Linear):
+        nn.init.xavier_uniform_(m.weight)        # or kaiming_uniform_, normal_, etc.
+        nn.init.constant_(m.bias, 0.5)          # custom bias init
+        
 # Binary conversion utility
 def int_to_binvec(n, width):
     return torch.tensor([int(b) for b in f"{n:0{width}b}"], dtype=torch.float32)
@@ -38,11 +44,13 @@ class PrimeDataset(Dataset):
 class DeepBinaryNet(nn.Module):
     def __init__(self, input_dim=20, hidden_dim=100, output_dim=10, num_hidden_layers=10):
         super().__init__()
-        layers = [nn.Linear(input_dim, hidden_dim), nn.ReLU()]
+        layers = [nn.Linear(input_dim, hidden_dim), nn.Sigmoid()]
         for _ in range(num_hidden_layers - 1):
-            layers += [nn.Linear(hidden_dim, hidden_dim), nn.ReLU()]
+            layers += [nn.Linear(hidden_dim, hidden_dim), nn.Tanh()]
         layers += [nn.Linear(hidden_dim, output_dim), nn.Sigmoid()]
         self.model = nn.Sequential(*layers)
+        # Step 3: Apply the custom initializer
+        self.model.apply(custom_init)
 
     def forward(self, x):
         return self.model(x)
