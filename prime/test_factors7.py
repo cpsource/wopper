@@ -11,6 +11,9 @@ OUTPUT_DIM = 20
 HIDDEN_DIM = 100
 NUM_HIDDEN_LAYERS = 10
 
+# Initialization parameters (same as training)
+BIAS_INIT_VALUE = 0.5
+
 # File paths
 MODEL_SAVE_PATH = "deep_binary_net.pth"
 TEST_DATA_FILE = "test_factors_output.csv"
@@ -22,6 +25,12 @@ SHOW_DETAILED_FIRST_N = 3  # Show detailed tracing for first N samples
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+# Step 1: Define the initializer function (same as training)
+def custom_init(m):
+    if isinstance(m, nn.Linear):
+        nn.init.xavier_uniform_(m.weight)
+        nn.init.constant_(m.bias, BIAS_INIT_VALUE)
+
 # Format helper: round and convert tensor to list of floats with 2 decimal places
 def format_tensor(t):
     return [round(float(v), 2) for v in t.squeeze()]
@@ -30,29 +39,29 @@ def format_tensor(t):
 class DeepBinaryNet(nn.Module):
     def __init__(self, input_dim=INPUT_DIM, hidden_dim=HIDDEN_DIM, output_dim=OUTPUT_DIM, num_hidden_layers=NUM_HIDDEN_LAYERS):
         super().__init__()
-        
-        # First layer: Input -> Hidden (with BatchNorm)
-        layers = [
+
+        modules = [
             nn.Linear(input_dim, hidden_dim),
             nn.BatchNorm1d(hidden_dim),
-            nn.ReLU()
+            nn.ReLU(),
         ]
-        
-        # Hidden layers: Hidden -> Hidden (with BatchNorm)
+
         for _ in range(num_hidden_layers - 1):
-            layers += [
+            modules += [
                 nn.Linear(hidden_dim, hidden_dim),
                 nn.BatchNorm1d(hidden_dim),
-                nn.ReLU()
+                nn.ReLU(),
             ]
-        
-        # Output layer: No BatchNorm here since we want specific output range
-        layers += [
+
+        modules += [
             nn.Linear(hidden_dim, output_dim),
-            nn.Sigmoid()
+            nn.Sigmoid(),
         ]
-        
-        self.model = nn.Sequential(*layers)
+
+        self.layers = nn.ModuleList(modules)
+
+        # Apply the same initializer used during training
+        self.apply(custom_init)
     
     def forward(self, x):
         # Enable tracing only for first few samples or if globally enabled
@@ -60,7 +69,7 @@ class DeepBinaryNet(nn.Module):
         
         if current_trace:
             print(f"🔍 Input: {format_tensor(x)}")
-            for i, layer in enumerate(self.model):
+            for i, layer in enumerate(self.layers):
                 if isinstance(layer, nn.Linear):
                     w = layer.weight.data
                     b = layer.bias.data
@@ -101,7 +110,9 @@ class DeepBinaryNet(nn.Module):
             print("\n✅ Final Output:", format_tensor(x))
             return x
         else:
-            return self.model(x)
+            for layer in self.layers:
+                x = layer(x)
+            return x
 
 # Convert integer to fixed-width binary vector
 def int_to_binvec(n, width):
