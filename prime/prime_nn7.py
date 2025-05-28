@@ -71,14 +71,16 @@ class DeepBinaryNet(nn.Module):
         modules = [
             nn.Linear(input_dim, hidden_dim),
             nn.BatchNorm1d(hidden_dim),
-            nn.ReLU()
+            nn.ReLU(),
+            nn.Dropout(p=0.5)
         ]
 
         for _ in range(num_hidden_layers - 1):
             modules += [
                 nn.Linear(hidden_dim, hidden_dim),
                 nn.BatchNorm1d(hidden_dim),
-                nn.ReLU()
+                nn.ReLU(),
+                nn.Dropout(p=0.5)
             ]
 
         modules += [
