@@ -68,34 +68,33 @@ class DeepBinaryNet(nn.Module):
     def __init__(self, input_dim=INPUT_DIM, hidden_dim=HIDDEN_DIM, output_dim=OUTPUT_DIM, num_hidden_layers=NUM_HIDDEN_LAYERS):
         super().__init__()
         
-        # First layer: Input -> Hidden (with BatchNorm)
-        layers = [
+        modules = [
             nn.Linear(input_dim, hidden_dim),
             nn.BatchNorm1d(hidden_dim),
-            nn.ReLU()  # Changed from Sigmoid to ReLU for better gradient flow
+            nn.ReLU()
         ]
-        
-        # Hidden layers: Hidden -> Hidden (with BatchNorm)
+
         for _ in range(num_hidden_layers - 1):
-            layers += [
+            modules += [
                 nn.Linear(hidden_dim, hidden_dim),
                 nn.BatchNorm1d(hidden_dim),
                 nn.ReLU()
             ]
-        
-        # Output layer: No BatchNorm here since we want specific output range
-        layers += [
+
+        modules += [
             nn.Linear(hidden_dim, output_dim),
-            nn.Sigmoid()  # Keep Sigmoid for binary output
+            nn.Sigmoid()
         ]
-        
-        self.model = nn.Sequential(*layers)
-        
+
+        self.layers = nn.ModuleList(modules)
+
         # Apply custom initializer only to Linear layers
-        self.model.apply(custom_init)
+        self.apply(custom_init)
     
     def forward(self, x):
-        return self.model(x)
+        for layer in self.layers:
+            x = layer(x)
+        return x
 
 # Load dataset
 data = pd.read_csv(DATA_FILE)
